@@ -1,0 +1,50 @@
+---
+title: "Prediction Assignment"
+author: "Laura Li"
+date: "October 25, 2014"
+output: html_document
+---
+Purpose of the assignment is to predict the manner of the barbell lift was done.
+
+##Data Processing
+```{r echo=FALSE}
+#Using following packages 
+library(caret)
+library(randomForest)
+```
+*Training Data*
+```{r}
+urltrain <- "http://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv"
+trainingOrg <- read.csv(urltrain, header = T, sep = ",")
+```
+
+##Pre Processing
+```{r}
+#Subsetting to remove the first 7 column which are not numeric.
+subtrain <- trainingOrg[,8:160]
+#Removing columns that contains NA's
+trainingraw <- subtrain[,colSums(is.na(subtrain))==0]
+#Remove all columsn containing #DIV/0
+nearzeros <- nearZeroVar(trainingraw)
+trainingraw <- trainingraw[,-nearzeros]
+#Data Splitting 60% training 40% testing
+inTrain <- createDataPartition(trainingraw$classe,p=0.6,list = F)
+training <- trainingraw[inTrain,]
+test <- trainingraw[-inTrain,]
+```
+
+##Model
+```{r}
+#Using Random Forest
+modelfit <- randomForest(classe~.,data=training)
+modelfit
+```
+
+##Cross Validation
+```{r}
+#against the test set from beginning
+pred <- predict (modelfit, newdata=test)
+confusionMatrix(pred,test$classe)
+```
+
+99.49% accuracy in the prediction.
